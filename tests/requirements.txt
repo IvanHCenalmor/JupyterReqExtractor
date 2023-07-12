@@ -1,0 +1,3 @@
+# Requirements for U-Net_2D_Multilabel_ZeroCostDL4Mic.ipynb
+pip==23.0.1
+requests==2.31.0

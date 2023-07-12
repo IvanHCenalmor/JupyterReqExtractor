@@ -26,7 +26,7 @@ classifiers = [
 "Bug Tracker" = "https://github.com/IvanHCenalmor/JupyterReqExtractor/issues"
 
 [project.scripts]
-jureqex = "jureqex.__main__:main"
+jureqex = "jureqex.requirement_extractor:main"
 
 [tool.bumpver]
 current_version = "2023.1001-alpha"
