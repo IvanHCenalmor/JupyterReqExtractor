@@ -13,3 +13,13 @@ pip install jureqex
 ```
 jureqex --path /path/to/notebook_folder --name notebook_name.ipynb --save /path/to/requirements.txt
 ```
+
+# Install from GitHub and use it in Colab
+
+First you need to download the Coalb notebook and update it in Colab's workspace.
+
+```
+!git clone https://github.com/IvanHCenalmor/JupyterReqExtractor.git
+!python -m pip install -e ./JupyterReqExtractor
+!jureqex --path /content --name XXX.ipynb --save /content/requirements.txt
+```
