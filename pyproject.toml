@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "jureqex"
-version = "0.0.1"
+version = "0.1"
 authors = [
   { name="Iván Hidalgo", email="ivanhcenalmor@gmail.com" },
 ]
@@ -26,7 +26,8 @@ classifiers = [
 "Bug Tracker" = "https://github.com/IvanHCenalmor/JupyterReqExtractor/issues"
 
 [project.scripts]
-realpython = "jureqex.__main__:main"
+jureqex = "jureqex.__main__:main"
+
 [tool.bumpver]
 current_version = "2023.1001-alpha"
 version_pattern = "YYYY.BUILD[-TAG]"
