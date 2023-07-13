@@ -29,7 +29,7 @@ classifiers = [
 jureqex = "jureqex.requirement_extractor:main"
 
 [tool.bumpver]
-current_version = "2023.1003-alpha"
+current_version = "2023.1004-alpha"
 version_pattern = "YYYY.BUILD[-TAG]"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = true
