@@ -9,7 +9,7 @@ from yarg.exceptions import HTTPError
 import requests
 import logging
 
-def requiremts_from_code(code):
+def requirements_from_code(code):
     """
     Extracts the required libraries and modules from the given code.
 
@@ -36,20 +36,20 @@ def requiremts_from_code(code):
 
     return imports + installations + loads
 
-def fix_requiremts(requiremts):
+def fix_requirements(requirements):
     """
     Fix the given list of requirements. Some of the libraries have different
     names when are imported than when they are installed, therefore we need to
     fix them.
 
     Parameters:
-        requiremts (list): A list of requirements to be fixed.
+        requirements (list): A list of requirements to be fixed.
 
     Returns:
         list: A list of fixed requirements.
     """
     fixed_requirements = []
-    for r in requiremts:
+    for r in requirements:
         if r == 'sklearn':
             fixed_requirements.append('scikit-learn')
         elif r == 'skimage':
@@ -60,6 +60,8 @@ def fix_requiremts(requiremts):
             fixed_requirements.append('future')
         elif r == 'memory_profiler':
             fixed_requirements.append('memory-profiler')
+        elif r == 'cv2':
+            fixed_requirements.append('opencv-python')
         else:
             fixed_requirements.append(r)
 
@@ -77,19 +79,19 @@ def extract_requirements(path_nb):
     """
     colab_nb = nbformat.read(path_nb, as_version=4)
 
-    requiremts = []
+    requirements = []
     for cell in colab_nb.cells:
         if cell.cell_type == "code":
             code = cell.source
-            cell_requirements = requiremts_from_code(code)
-            requiremts += cell_requirements
+            cell_requirements = requirements_from_code(code)
+            requirements += cell_requirements
         elif cell.cell_type == "markdown":
             pass
     
-    requiremts = list(set(requiremts))
-    requiremts = fix_requiremts(requiremts)
+    requirements = list(set(requirements))
+    requirements = fix_requirements(requirements)
     
-    return requiremts
+    return requirements
     
 def compare_with_freeze(path_nb, requirement_list=[]):
     """
@@ -115,7 +117,11 @@ def compare_with_freeze(path_nb, requirement_list=[]):
     libraries_with_version = {}
     for pkg in pkgs: 
         if '@' in pkg:
-            # Means that the library is in a local file
+            if 'https://' in pkg:
+                library = pkg.split('@')[0]
+                version = pkg.split('@')[1]
+                libraries_with_version[library] = version
+            # Else, it means that the library is in a local file
             continue
         elif '==' in pkg:
             library = pkg.split('==')[0]
@@ -146,15 +152,18 @@ def compare_with_freeze(path_nb, requirement_list=[]):
                                     reason=response.reason)
             except HTTPError:
                 logging.warning(
-                    'Package "%s" does not exist or network problems', item)
+                    'Package "%s" does not exist or network problems', req)
                 continue
 
-            if version in data._releases.keys() and req!="ipywidgets":  
-                actual_version = version
-            else:
-                actual_version = data.latest_release_id
+            if 'https://' in version:
+                requirements_with_version.append(f'{req}@{version}')
+            else:  
+                if version in data._releases.keys() and req!="ipywidgets":  
+                    actual_version = version
+                else:
+                    actual_version = data.latest_release_id
 
-            requirements_with_version.append(f'{req}=={actual_version}')
+                requirements_with_version.append(f'{req}=={actual_version}')
 
     return requirements_with_version
 
@@ -175,25 +184,25 @@ def main():
     parser.add_argument("--save", help="Path with the name where the requirements are going to be saved", required=True)
     args = vars(parser.parse_args())
     
-    path_requiremts =  os.path.join(args["save"])
+    path_requirements =  os.path.join(args["save"])
     nb_path = os.path.join(args["path"], args["name"])
 
-    notebook_requiremts = extract_requirements(nb_path)
+    notebook_requirements = extract_requirements(nb_path)
 
-    req_directory, req_name = os.path.split(path_requiremts)
+    req_directory, req_name = os.path.split(path_requirements)
     path_notebook_requirements = os.path.join(req_directory, 'notebook_'+req_name)
 
     file=open(path_notebook_requirements,'w')
     file.writelines(f'# Requirements for {args["name"]}\n')
-    for item in sorted(notebook_requiremts):
+    for item in sorted(notebook_requirements):
         file.writelines(item + '\n')
     file.close()
 
-    requiremts = compare_with_freeze(nb_path)
+    requirements = compare_with_freeze(nb_path)
 
-    file=open(path_requiremts,'w')
+    file=open(path_requirements,'w')
     file.writelines(f'# Requirements for {args["name"]}\n')
-    for item in sorted(requiremts):
+    for item in sorted(requirements):
         file.writelines(item + '\n')
     file.close()    
 
