@@ -92,7 +92,7 @@ def extract_requirements(path_nb):
     requirements = fix_requirements(requirements)
     
     return requirements
-    
+
 def compare_with_freeze(path_nb, requirement_list=[]):
     """
     Compare the requirements of a Jupyter notebook with the installed packages.
@@ -118,11 +118,10 @@ def compare_with_freeze(path_nb, requirement_list=[]):
     for pkg in pkgs: 
         if '@' in pkg:
             if 'https://' in pkg:
-                library = pkg.split('@')[0]
-                version = pkg.split('@')[1]
+                library = pkg.split('@')[0].strip()
+                version = pkg.split('@')[1].strip()
                 libraries_with_version[library] = version
             # Else, it means that the library is in a local file
-            continue
         elif '==' in pkg:
             library = pkg.split('==')[0]
             version = pkg.split('==')[1]
@@ -136,28 +135,27 @@ def compare_with_freeze(path_nb, requirement_list=[]):
     for req in requirements:
         if req in list(libraries_with_version.keys()):
             version = libraries_with_version[req]
-
-            # Following code is taken form https://github.com/bndr/pipreqs/blob/a1f83d27d9a42aa95b481e2fa94716702266110c/pipreqs/pipreqs.py#L173C5-L173C21
-            # In case the version obtained from 'pip freeze' is not available in Pypi, we use the latest version
-            try:
-                response = requests.get(
-                    "{0}{1}/json".format("https://pypi.python.org/pypi/", req), proxies=None)
-                if response.status_code == 200:
-                    if hasattr(response.content, 'decode'):
-                        data = json2package(response.content.decode())
-                    else:
-                        data = json2package(response.content)
-                elif response.status_code >= 300:
-                    raise HTTPError(status_code=response.status_code,
-                                    reason=response.reason)
-            except HTTPError:
-                logging.warning(
-                    'Package "%s" does not exist or network problems', req)
-                continue
-
             if 'https://' in version:
-                requirements_with_version.append(f'{req}@{version}')
+                requirements_with_version.append(f'{req} @ {version}')
             else:  
+                # Following code is taken form https://github.com/bndr/pipreqs/blob/a1f83d27d9a42aa95b481e2fa94716702266110c/pipreqs/pipreqs.py#L173C5-L173C21
+                # In case the version obtained from 'pip freeze' is not available in Pypi, we use the latest version
+                try:
+                    response = requests.get(
+                        "{0}{1}/json".format("https://pypi.python.org/pypi/", req), proxies=None)
+                    if response.status_code == 200:
+                        if hasattr(response.content, 'decode'):
+                            data = json2package(response.content.decode())
+                        else:
+                            data = json2package(response.content)
+                    elif response.status_code >= 300:
+                        raise HTTPError(status_code=response.status_code,
+                                        reason=response.reason)
+                except HTTPError:
+                    logging.warning(
+                        'Package "%s" does not exist or network problems', req)
+                    continue
+
                 if version in data._releases.keys() and req!="ipywidgets":  
                     actual_version = version
                 else:
@@ -166,7 +164,6 @@ def compare_with_freeze(path_nb, requirement_list=[]):
                 requirements_with_version.append(f'{req}=={actual_version}')
 
     return requirements_with_version
-
 
 def main():
     """
